@@ -1,0 +1,36 @@
+--- prep revenue data for waterfall chart ---
+WITH prep AS (
+SELECT id
+, loan_status 
+, purpose 
+,  CASE
+    WHEN CAST(annual_inc AS INT) < 40000 THEN 'Low Income'
+    WHEN CAST(annual_inc AS INT) >= 40000 AND CAST(annual_inc AS INT) < 70000 THEN 'Lower-Middle Income'
+    WHEN CAST(annual_inc AS INT) >= 70000 AND CAST(annual_inc AS INT) < 120000 THEN 'Upper-Middle Income'
+    WHEN CAST(annual_inc AS INT) >= 120000 THEN 'High Income'
+    ELSE 'Unknown'
+  END AS customer_segment
+, annual_inc
+, funded_amnt 
+, total_rec_int 
+FROM  destination_growth.test_dataset
+)
+--- agg total revenue ---
+, total_revenue AS (
+SELECT 
+'Total' AS total_revenue 
+, SUM(total_rec_int) AS total_rec_int 
+FROM prep 
+GROUP BY 1
+)
+--- agg revenue by customer segment ---
+, cus_seg AS (
+SELECT 
+customer_segment 
+, SUM(total_rec_int ) AS rec_int 
+FROM prep 
+GROUP BY 1
+)
+SELECT * FROM total_revenue 
+UNION 
+SELECT * FROM cus_seg
