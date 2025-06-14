@@ -13,7 +13,7 @@ SELECT id
 , annual_inc
 , funded_amnt 
 , total_rec_int 
-FROM  destination_growth.test_dataset
+FROM  loan_data
 )
 --- agg total revenue ---
 , total_revenue AS (
