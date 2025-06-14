@@ -1,0 +1,26 @@
+--- prep loan data ---
+WITH prep AS (
+SELECT id
+,  CASE
+    WHEN CAST(annual_inc AS INT) < 40000 THEN 'Low Income'
+    WHEN CAST(annual_inc AS INT) >= 40000 AND CAST(annual_inc AS INT) < 70000 THEN 'Lower-Middle Income'
+    WHEN CAST(annual_inc AS INT) >= 70000 AND CAST(annual_inc AS INT) < 120000 THEN 'Upper-Middle Income'
+    WHEN CAST(annual_inc AS INT) >= 120000 THEN 'High Income'
+    ELSE 'Unknown'
+  END AS customer_segment
+, annual_inc
+, funded_amnt 
+, total_rec_int 
+, total_rec_prncp
+, out_prncp
+FROM destination_growth.test_dataset
+)
+--- calculate revenue (interest) share for each customer segmentation ---
+SELECT 
+customer_segment 
+, SUM(total_rec_int) AS segment_total_rec_int
+, SUM(SUM(total_rec_int)) OVER () AS overall_total_rec_int
+--- calculate the share as a decimal (can multiply by 100 for percentage)
+, SUM(total_rec_int) * 1.0 / SUM(SUM(total_rec_int)) OVER () AS segment_share
+FROM prep 
+GROUP BY 1 ORDER BY 3 DESC 
