@@ -1,4 +1,4 @@
---- prep average roi per customer segment data ---
+--- prep financial metrics per customer segment data ---
 WITH prep AS (
 SELECT id
 , loan_status 
@@ -10,16 +10,28 @@ SELECT id
     ELSE 'Unknown'
   END AS customer_segment
 , annual_inc
+, dti
+, int_rate
 , funded_amnt 
 , total_rec_int 
 , total_rec_prncp
 , out_prncp
+--- roi per loan ---
 , (total_rec_int + total_rec_prncp - out_prncp) / funded_amnt AS roi
 FROM loan_data
 )
 SELECT 
 customer_segment 
 , COUNT(DISTINCT id) AS total_loan
+--- typical loan size of the portfolio ---
+, SUM(funded_amt)/COUNT(DISTINCT id) AS avg_loan_amt
+--- typical interest that being charged ---
+, AVG(int_rate) AS avg_int_rate
+--- financial health of borrowers ---
+, SUM(dti * funded_amt) / SUM(funded_amt) AS w_avg_dti
+--- typical interest collected ---
+, SUM(total_rec_int) AS revenue
+--- average roi ---
 , AVG(roi) AS average_roi 
 FROM prep 
 GROUP BY 1
