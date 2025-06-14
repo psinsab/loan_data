@@ -1,0 +1,25 @@
+--- prep average roi per customer segment data ---
+WITH prep AS (
+SELECT id
+, loan_status 
+,  CASE
+    WHEN CAST(annual_inc AS INT) < 40000 THEN 'Low Income'
+    WHEN CAST(annual_inc AS INT) >= 40000 AND CAST(annual_inc AS INT) < 70000 THEN 'Lower-Middle Income'
+    WHEN CAST(annual_inc AS INT) >= 70000 AND CAST(annual_inc AS INT) < 120000 THEN 'Upper-Middle Income'
+    WHEN CAST(annual_inc AS INT) >= 120000 THEN 'High Income'
+    ELSE 'Unknown'
+  END AS customer_segment
+, annual_inc
+, funded_amnt 
+, total_rec_int 
+, total_rec_prncp
+, out_prncp
+, (total_rec_int + total_rec_prncp - out_prncp) / funded_amnt AS roi
+FROM loan_data
+)
+SELECT 
+customer_segment 
+, COUNT(DISTINCT id) AS total_loan
+, AVG(roi) AS average_roi 
+FROM prep 
+GROUP BY 1
